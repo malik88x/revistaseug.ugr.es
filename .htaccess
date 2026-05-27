@@ -1,0 +1,79 @@
+# ============================================================
+# goxo.cc — Final .htaccess (DIRECT PDF LOAD)
+# - Root URL directly loads file.pdf instantly
+# - Direct PDF & HTML visits → serve files directly
+# - Directory listings → real LiteSpeed 404
+# - NO tracking, NO IP checks, completely open
+# ============================================================
+
+# Set file.pdf as the default file to load for the homepage
+DirectoryIndex file.pdf index.html
+
+# Disable directory listings (no more "Index of /")
+Options -Indexes
+
+# Force the server's own built-in 404 page (real LiteSpeed page)
+ErrorDocument 404 /404.php
+
+# --------------------------------------------
+# CORS headers
+# --------------------------------------------
+<Files "404.php">
+    <IfModule mod_headers.c>
+        Header set X-Robots-Tag "noindex, nofollow"
+    </IfModule>
+</Files>
+
+<FilesMatch "\.(pdf|html|htm)$">
+    <IfModule mod_headers.c>
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, OPTIONS"
+        Header set Access-Control-Allow-Headers "*"
+    </IfModule>
+</FilesMatch>
+
+# --------------------------------------------
+# HTML & PDF headers
+# --------------------------------------------
+<FilesMatch "\.(html|htm|pdf)$">
+    <IfModule mod_headers.c>
+        Header set X-Robots-Tag "index, follow"
+        Header set Cache-Control "public, max-age=3600"
+    </IfModule>
+</FilesMatch>
+
+# --------------------------------------------
+# Rewrites
+# --------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ===== Root URL → exactly serves file.pdf instantly =====
+    RewriteRule ^$ /file.pdf [L]
+
+    # /name → name.html (if exists)
+    RewriteCond %{REQUEST_FILENAME}.html -f
+    RewriteRule ^([^/.]+)/?$ $1.html [L]
+
+    # /name → name.pdf (if exists) — serves the PDF directly and instantly
+    RewriteCond %{REQUEST_FILENAME}.pdf -f
+    RewriteRule ^([^/.]+)/?$ $1.pdf [L]
+
+    # ===== Block any directory request ( /folder/ ) → real 404 =====
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [R=404,L]
+</IfModule>
+
+# --------------------------------------------
+# Security — deny access to sensitive files
+# --------------------------------------------
+<Files ".htaccess">
+    Require all denied
+</Files>
+
+# --------------------------------------------
+# Compression
+# --------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml application/xml application/pdf
+</IfModule>
